@@ -89,6 +89,9 @@ int CUdpClientSocket::send1(SOCKET s, const char* buf, int len, bool bSyn)
 			return WSAGetLastError();
 		}
 
+	RecvAgain:
+
+		// 要么 接收到正确的返回包，要么 超时
 		int len2, addr_len = sizeof(sockaddr);
 		int ret = recvfrom(s, sz2, &len2, dwTimeout, (sockaddr*)&m_addr, &addr_len);
 		if (ret == WSA_WAIT_TIMEOUT)
@@ -108,6 +111,10 @@ int CUdpClientSocket::send1(SOCKET s, const char* buf, int len, bool bSyn)
 					break;
 				}
 			}
+
+			WriteLog(L"\t\t\t接收到错误返回包一次", __FILEW__, __LINE__);
+
+			goto RecvAgain; // 不断的 接收 正确的返回包 直到超时
 		}
 		else
 		{
